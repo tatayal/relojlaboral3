@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>ControlAsistencia Pro</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>tailwind.config={darkMode:'class'}</script>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f1f5f9;color:#1e293b}
+.dark body{background:#020617;color:#f1f5f9}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:1.5rem}
+.dark .card{background:#0f172a;border-color:#1e293b}
+.i{width:100%;min-height:42px;padding:0 .7rem;border-radius:.75rem;border:1px solid #cbd5e1;background:#f8fafc;color:#0f172a;font-size:.8rem}
+.dark .i{background:#1e293b;border-color:#334155;color:#fff}
+.b{min-height:38px;padding:0 .85rem;border-radius:.75rem;font-size:.75rem;font-weight:700}
+.sl{background:#e2e8f0}.dark .sl{background:#1e293b}
+.bx{background:#f8fafc;border:1px solid #e2e8f0}.dark .bx{background:#1e293b99;border-color:#334155}
+</style></head>
+<body>
+<div id="login" class="min-h-screen flex items-center justify-center p-4">
+ <form onsubmit="login(event)" class="card w-full max-w-sm p-6 space-y-3">
+  <h1 class="text-xl font-extrabold text-center">ControlAsistencia Pro</h1>
+  <input id="lu" class="i" placeholder="Usuario" required autocomplete="username">
+  <input id="lc" type="password" class="i" placeholder="Código / contraseña" required autocomplete="current-password">
+  <p id="le" class="hidden text-xs text-rose-600 text-center"></p>
+  <button class="b w-full !min-h-[46px] bg-emerald-600 text-white">Iniciar sesión</button>
+  <p class="text-[11px] text-slate-500 text-center">admin / admin123 · user1 / 1001 … user10 / 1010</p>
+ </form>
+</div>
+
+<div id="app" class="hidden">
+ <header class="card m-3 p-3 flex flex-wrap items-center justify-between gap-2">
+  <div><b>ControlAsistencia Pro</b> <span id="rol" class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700"></span>
+   <div class="text-xs text-slate-500">Usuario: <b id="hu" class="mono"></b></div></div>
+  <div class="flex flex-wrap gap-1.5">
+   <button class="b adm hidden sl" onclick="mCuentas()">Cuentas</button>
+   <button class="b adm hidden sl" onclick="mReporte()">Reporte</button>
+   <button class="b adm hidden sl" onclick="mAud()">Auditoría</button>
+   <button class="b adm hidden sl" onclick="mHorario()">Horario</button>
+   <button class="b sl" onclick="tema()">🌓</button>
+   <button class="b bg-rose-100 text-rose-700" onclick="salir()">Salir</button>
+  </div>
+ </header>
+ <main class="px-3 pb-6 space-y-3 max-w-5xl mx-auto">
+  <div class="grid lg:grid-cols-2 gap-3">
+   <section class="card p-5 space-y-3">
+    <div class="flex flex-wrap justify-between gap-2 items-center">
+     <h2 id="tit" class="font-bold"></h2>
+     <div class="adm hidden flex gap-2 items-center"><select id="sel" class="i !w-auto" onchange="emp=this.value;draw()"></select><button class="b bg-emerald-600 text-white" onclick="mNuevo()">+ Empleado</button></div>
+    </div>
+    <div class="text-center rounded-2xl bx py-4"><p id="fec" class="text-xs uppercase text-slate-500"></p>
+     <p><span id="hor" class="mono text-4xl font-extrabold">--:--:--</span> <span id="ap" class="mono font-bold text-emerald-600"></span></p></div>
+    <div class="grid grid-cols-2 gap-2 text-sm">
+     <div class="rounded-xl bx p-3"><p class="text-[11px] uppercase text-slate-500">Estado</p><b id="est">Fuera de turno</b></div>
+     <div class="rounded-xl bx p-3"><p class="text-[11px] uppercase text-slate-500">Transcurrido</p><b id="cro" class="mono text-emerald-600">00h 00m 00s</b></div>
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+     <button id="bE" class="b !min-h-[48px] bg-emerald-600 text-white disabled:opacity-40" onclick="marcar('Entrada')">Registrar entrada</button>
+     <button id="bS" class="b !min-h-[48px] bg-rose-600 text-white disabled:opacity-40" onclick="marcar('Salida')">Registrar salida</button>
+    </div>
+    <button class="adm hidden text-xs font-bold text-sky-600" onclick="mManual()">+ Fichaje manual</button>
+   </section>
+   <section class="card p-5 text-sm space-y-2">
+    <h3 class="font-extrabold">Resumen del mes</h3>
+    <p class="flex justify-between"><span class="text-slate-500">Horario</span><b id="rg" class="mono"></b></p>
+    <p class="flex justify-between"><span class="text-slate-500">Días trabajados</span><b id="rd" class="text-emerald-600"></b></p>
+    <p class="flex justify-between"><span class="text-slate-500">Horas totales</span><b id="rh" class="mono text-sky-600"></b></p>
+    <p class="flex justify-between pt-2 border-t border-slate-200 dark:border-slate-800 text-xs"><span id="sync" class="text-slate-400"></span><button class="adm hidden text-rose-600 font-bold" onclick="limpiar()">Limpiar historial</button></p>
+   </section>
+  </div>
+  <section class="card p-4">
+   <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+    <h3 class="font-extrabold">Calendario de asistencia</h3>
+    <div class="flex items-center gap-2"><button class="b sl" onclick="navMes(-1)">Anterior</button><span id="cm" class="mono text-xs font-bold min-w-[120px] text-center"></span><button class="b sl" onclick="navMes(1)">Siguiente</button></div>
+   </div>
+   <div class="grid grid-cols-7 gap-1 text-center text-[11px] uppercase font-bold text-slate-400 mb-1"><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div></div>
+   <div id="cal" class="grid grid-cols-7 gap-1"></div>
+  </section>
+ </main>
+</div>
+
+<div id="ov" class="hidden fixed inset-0 z-50 bg-slate-900/60 flex items-end sm:items-center justify-center sm:p-4" onclick="if(event.target===this)cerrar()">
+ <div class="card !rounded-b-none sm:!rounded-3xl w-full max-w-2xl p-5 max-h-[90vh] overflow-y-auto">
+  <div class="flex justify-between items-center mb-3"><h3 id="mt" class="font-extrabold"></h3><button class="b sl" onclick="cerrar()">Cerrar</button></div>
+  <div id="mb"></div>
+ </div>
+</div>
+<div id="ts" class="hidden fixed bottom-4 right-4 left-4 sm:left-auto z-[60] bg-slate-900 text-white text-xs px-4 py-3 rounded-2xl shadow-xl"></div>
+
+<script>
+const APP='controlasistencia-pro-v11';
+// Para sincronizar con Firebase pega aquí tu config (Realtime Database). Vacía = modo local.
+const FB={
+  apiKey:"AIzaSyDQ1o3iaz5NzcvdrLhS-jazaWESD9mZZ0k",
+  authDomain:"controlasistencia-3f1f0.firebaseapp.com",
+  databaseURL:"https://controlasistencia-3f1f0-default-rtdb.firebaseio.com",
+  projectId:"controlasistencia-3f1f0",
+  storageBucket:"controlasistencia-3f1f0.firebasestorage.app",
+  messagingSenderId:"239933807692",
+  appId:"1:239933807692:web:b29425bbd0c266a2bba8e9"
+};
+const $=i=>document.getElementById(i),pad=n=>String(n).padStart(2,'0');
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const ADM0={usuario:'admin',codigo:'admin123',nombre:'Administrador General'},CFG0={horaEsperada:'09:00',horaSalidaEsperada:'18:00',toleranciaMin:5};
+const defCtas=()=>Array.from({length:10},(_,k)=>({slot:k+1,cuentaId:'CTA-'+pad(k+1),nombre:'Usuario '+(k+1),usuario:'user'+(k+1),codigo:String(1001+k),activa:true}));
+let DB,extras=[],regs=[],aud=[],ctas=defCtas(),adm={...ADM0},cfg={...CFG0},ses=null,emp='',sel=null,mes=new Date().getMonth(),anio=new Date().getFullYear();
+const adminQ=()=>ses&&ses.rol==='ADMIN',PRE=()=>`${anio}-${pad(mes+1)}`;
+
+/* ---------- Almacenamiento ---------- */
+function local(){
+ const K='controlAsistencia_db_local',os=[];let d={};
+ const load=()=>{try{d=JSON.parse(localStorage.getItem(K))||{}}catch(e){}};
+ const ps=p=>String(p||'').split('/').filter(Boolean),cl=v=>v==null?null:JSON.parse(JSON.stringify(v));
+ const rd=p=>{let n=d;for(const k of ps(p)){if(n==null||typeof n!=='object')return null;n=n[k]}return n===undefined?null:n};
+ const prune=o=>{for(const k of Object.keys(o))if(o[k]&&typeof o[k]==='object'){prune(o[k]);if(!Object.keys(o[k]).length)delete o[k]}};
+ const wr=(p,v)=>{const ks=ps(p);if(!ks.length){d=cl(v)||{};return}let n=d;ks.slice(0,-1).forEach(k=>{if(n[k]==null||typeof n[k]!=='object')n[k]={};n=n[k]});const l=ks[ks.length-1];if(v==null)delete n[l];else n[l]=cl(v)};
+ const sn=p=>({val:()=>cl(rd(p))}),save=()=>{prune(d);try{localStorage.setItem(K,JSON.stringify(d))}catch(e){}os.forEach(o=>o.cb(sn(o.p)));return Promise.resolve()};
+ load();addEventListener('storage',e=>{if(e.key===K){load();os.forEach(o=>o.cb(sn(o.p)))}});
+ return{ref:p=>String(p||''),set:(p,v)=>{wr(p,v);return save()},update:(p,o)=>{Object.entries(o).forEach(([k,v])=>wr(ps(p).concat(ps(k)).join('/'),v));return save()},remove:p=>{wr(p,null);return save()},onValue:(p,cb)=>{os.push({p,cb});setTimeout(()=>cb(sn(p)),0)}};
+}
+async function fbStore(){
+ const B='https://www.gstatic.com/firebasejs/11.6.1/',[{initializeApp},au,r]=await Promise.all([import(B+'firebase-app.js'),import(B+'firebase-auth.js'),import(B+'firebase-database.js')]);
+ const app=initializeApp(FB);try{await au.signInAnonymously(au.getAuth(app))}catch(e){console.warn('Auth anónima no disponible',e)}
+ const db=r.getDatabase(app);
+ return{ref:p=>r.ref(db,`artifacts/${APP}/public/data`+(p?'/'+p:'')),set:r.set,update:r.update,remove:r.remove,onValue:r.onValue};
+}
+function escuchas(){
+ const{ref,onValue}=DB;
+ onValue(ref('cuentasAcceso'),s=>{const d=s.val()||{};ctas=defCtas().map(c=>d['cuenta_'+c.slot]||c);
+  if(ses&&ses.rol==='INDIVIDUAL'){const c=ctas.find(x=>x.slot==ses.slot);if(!c||c.activa===false){salir();toast('Sesión cerrada','Cuenta suspendida');return}}perm();draw()});
+ onValue(ref('cuentaAdmin'),s=>{adm={...ADM0,...s.val()}});
+ onValue(ref('empleadosExtras'),s=>{extras=Object.values(s.val()||{});perm();draw()});
+ onValue(ref('registros'),s=>{regs=Object.values(s.val()||{}).sort((a,b)=>a.timestamp-b.timestamp);draw()});
+ onValue(ref('config'),s=>{cfg={...CFG0,...s.val()};draw()});
+ onValue(ref('auditoria'),s=>{aud=Object.values(s.val()||{}).sort((a,b)=>b.timestamp-a.timestamp).slice(0,50)});
+}
+function audit(a,d){if(!adminQ())return;const n=new Date(),id='AUD-'+n.getTime();DB.set(DB.ref('auditoria/'+id),{id,timestamp:n.getTime(),fechaLegible:n.toLocaleString('es-ES'),usuario:ses.usuario,accion:a,detalle:d})}
+
+/* ---------- Sesión ---------- */
+function login(e){e.preventDefault();const u=$('lu').value.trim().toLowerCase(),c=$('lc').value.trim(),er=$('le'),bad=m=>{er.textContent=m;er.classList.remove('hidden')};
+ if(u===adm.usuario.toLowerCase()&&c===adm.codigo)return entrar({rol:'ADMIN',usuario:adm.usuario,nombre:adm.nombre});
+ const a=ctas.find(x=>x.usuario.toLowerCase()===u&&x.codigo===c);
+ if(!a)return bad('Usuario o código no autorizado.');
+ if(a.activa===false)return bad('Cuenta suspendida por el administrador.');
+ entrar({rol:'INDIVIDUAL',slot:+a.slot,cuentaId:a.cuentaId,usuario:a.usuario,nombre:a.nombre||a.usuario});}
+function entrar(s){ses=s;try{sessionStorage.setItem('ca_ses',JSON.stringify(s))}catch(e){}$('le').classList.add('hidden');$('lc').value='';$('login').classList.add('hidden');$('app').classList.remove('hidden');perm();draw();toast('Bienvenido',s.nombre)}
+function salir(){ses=null;try{sessionStorage.removeItem('ca_ses')}catch(e){}$('app').classList.add('hidden');$('login').classList.remove('hidden');cerrar()}
+function personas(){return[...ctas.map(c=>({id:c.cuentaId,nombre:c.nombre||c.usuario,sub:c.usuario})),...extras.map(e=>({id:e.id,nombre:e.nombre,sub:e.cargo}))]}
+function perm(){if(!ses)return;const a=adminQ();$('rol').textContent=a?'Admin':'Individual';$('hu').textContent=ses.usuario;
+ document.querySelectorAll('.adm').forEach(e=>e.classList.toggle('hidden',!a));
+ if(a){const p=personas();if(!emp||!p.some(x=>x.id===emp))emp=p[0].id;$('sel').innerHTML=p.map(x=>`<option value="${esc(x.id)}" ${x.id===emp?'selected':''}>${esc(x.nombre)} [${esc(x.sub)}]</option>`).join('');$('tit').textContent='Panel de administración'}
+ else{emp=ses.cuentaId;$('tit').textContent=ses.nombre}}
+function tema(){const d=document.documentElement.classList.toggle('dark');try{localStorage.setItem('ca_tema',d?'d':'l')}catch(e){}}
+
+/* ---------- Cálculos ---------- */
+const dur=(ms,s)=>{ms=Math.max(0,ms||0);const t=Math.floor(ms/1000),h=Math.floor(t/3600),m=Math.floor(t%3600/60);return s?`${pad(h)}h ${pad(m)}m ${pad(t%60)}s`:`${h}h ${pad(m)}m`};
+const a12=s=>{if(!s)return'';const[h,m,x='00']=s.split(':');return`${pad(h%12||12)}:${m}:${x} ${h>=12?'PM':'AM'}`},c12=s=>a12(s).replace(/:\d\d /,' ');
+const mins=ts=>{const d=new Date(ts);return d.getHours()*60+d.getMinutes()},tm=s=>{const[h,m]=s.split(':').map(Number);return h*60+m};
+function evEnt(ts){const e=tm(cfg.horaEsperada),m=mins(ts);return m<=e+Number(cfg.toleranciaMin)?{tarde:false,et:'A tiempo'}:{tarde:true,et:`Atraso (+${m-e} min)`}}
+function evSal(ts){const e=tm(cfg.horaSalidaEsperada),m=mins(ts);return m<e-Number(cfg.toleranciaMin)?{ant:true,et:`Salida anticipada (-${e-m} min)`}:{ant:false,et:'Jornada completa'}}
+function resumen(id,pre){
+ const d={},o={dias:0,ms:0,ok:0,tarde:0,ant:0};
+ regs.filter(r=>r.empleadoId===id&&r.fechaISO&&r.fechaISO.startsWith(pre)).forEach(r=>(d[r.fechaISO]=d[r.fechaISO]||[]).push(r));
+ Object.values(d).forEach(l=>{let ini=null,ult=null,pri=true;
+  l.forEach(r=>{if(r.tipo==='Entrada'){if(pri){pri=false;o.dias++;evEnt(r.timestamp).tarde?o.tarde++:o.ok++}ini=r.timestamp}
+   else{if(ini!=null){o.ms+=r.timestamp-ini;ini=null}ult=r.timestamp}});
+  if(ult!=null&&evSal(ult).ant)o.ant++});
+ return o}
+function hoy(id){const l=regs.filter(r=>r.empleadoId===id&&r.fechaISO===iso(new Date()));let ab=null,acc=0;l.forEach(r=>{if(r.tipo==='Entrada')ab=r.timestamp;else if(ab!=null){acc+=r.timestamp-ab;ab=null}});return{ab,acc,l}}
+const marcasDia=f=>regs.filter(r=>r.fechaISO===f&&(!emp||r.empleadoId===emp));
+const marcasDetalle=f=>adminQ()?regs.filter(r=>r.fechaISO===f):marcasDia(f);
+
+/* ---------- Fichaje ---------- */
+function tick(){const n=new Date(),h=n.getHours();$('hor').textContent=`${pad(h%12||12)}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;$('ap').textContent=h>=12?'PM':'AM';
+ $('fec').textContent=n.toLocaleDateString('es-ES',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+ if(!ses||!emp)return;const s=hoy(emp);$('est').textContent=s.ab!=null?'En turno activo':'Fuera de turno';$('cro').textContent=dur(s.acc+(s.ab!=null?n-s.ab:0),1);$('bE').disabled=s.ab!=null;$('bS').disabled=s.ab==null}
+setInterval(tick,1000);tick();
+function guardarReg(r,msg){r.id='REG-'+r.timestamp+'-'+Math.random().toString(36).slice(2,6);r.fechaLegible=new Date(r.timestamp).toLocaleDateString('es-ES');
+ return DB.set(DB.ref('registros/'+r.id),r).then(()=>{sel=r.fechaISO;toast('Guardado',msg)}).catch(()=>toast('Error','No se pudo guardar'))}
+function marcar(tipo){const p=personas().find(x=>x.id===emp);if(!p)return;const s=hoy(emp);if((tipo==='Entrada')===(s.ab!=null))return;
+ const n=new Date(),ts=n.getTime(),et=tipo==='Entrada'?(s.l.some(r=>r.tipo==='Entrada')?'Reingreso':evEnt(ts).et):evSal(ts).et;
+ guardarReg({timestamp:ts,fechaISO:iso(n),empleadoId:p.id,empleadoNombre:p.nombre,tipo,hora:`${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`,duracionTurno:tipo==='Salida'?dur(ts-s.ab):'—',estadoPuntualidad:et,registradoPor:ses.usuario},`${tipo} registrada para ${p.nombre}`)}
+
+/* ---------- Calendario ---------- */
+function navMes(d){mes+=d;if(mes>11){mes=0;anio++}if(mes<0){mes=11;anio--}draw()}
+function draw(){if(!ses)return;tick();const pre=PRE(),r=resumen(emp,pre),t=iso(new Date());
+ $('rg').textContent=`${cfg.horaEsperada} – ${cfg.horaSalidaEsperada} (+${cfg.toleranciaMin}m)`;$('rd').textContent=r.dias+' días';$('rh').textContent=dur(r.ms);
+ $('cm').textContent=`${MESES[mes]} ${anio}`;
+ const off=(new Date(anio,mes,1).getDay()+6)%7,n=new Date(anio,mes+1,0).getDate();let h='<div></div>'.repeat(off);
+ for(let d=1;d<=n;d++){const f=`${pre}-${pad(d)}`,m=marcasDetalle(f),e=m.find(x=>x.tipo==='Entrada'),s=[...m].reverse().find(x=>x.tipo==='Salida');
+  h+=`<button onclick="detalle('${f}')" class="h-20 sm:h-24 rounded-2xl p-1.5 text-left bx border ${f===t?'!border-emerald-500':''} flex flex-col justify-between overflow-hidden"><span class="text-xs font-extrabold">${d}${m.length?' <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>':''}</span>${m.length?`<span class="mono text-[10px] leading-tight">${e&&!adminQ()?`<span class="text-emerald-600 block">↓ ${c12(e.hora)}</span>`:''}${s&&!adminQ()?`<span class="text-rose-600 block">↑ ${c12(s.hora)}</span>`:''}<span class="text-slate-500">${adminQ()?new Set(m.map(x=>x.empleadoId)).size+' persona(s)':m.length+' marcas'}</span></span>`:''}</button>`}
+ $('cal').innerHTML=h}
+
+/* ---------- Modales ---------- */
+const abrir=(t,h)=>{$('mt').textContent=t;$('mb').innerHTML=h;$('ov').classList.remove('hidden')},cerrar=()=>$('ov').classList.add('hidden');
+let tt;function toast(t,m){const e=$('ts');e.innerHTML=`<b>${esc(t)}</b> ${esc(m)}`;e.classList.remove('hidden');clearTimeout(tt);tt=setTimeout(()=>e.classList.add('hidden'),3000)}
+const csvq=v=>`"${String(v??'').replace(/"/g,'""')}"`;
+function bajar(n,csv){const u=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');a.href=u;a.download=n;document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},300)}
+
+function detalle(f){sel=f;const m=marcasDetalle(f),[y,mo,d]=f.split('-');
+ const ids=[...new Set(m.map(r=>r.empleadoId))],resDia=adminQ()&&ids.length?`<div class="mb-3"><p class="text-[11px] uppercase font-bold text-slate-500 mb-1">Trabajaron este día: ${ids.length}</p>${ids.map(id=>{const l=m.filter(r=>r.empleadoId===id),en=l.find(r=>r.tipo==='Entrada'),sa=[...l].reverse().find(r=>r.tipo==='Salida');let ini=null,ms=0;l.forEach(r=>{if(r.tipo==='Entrada')ini=r.timestamp;else if(ini!=null){ms+=r.timestamp-ini;ini=null}});return`<div class="flex justify-between items-center gap-2 p-2.5 mb-1.5 rounded-xl bx text-xs"><b>${esc(l[0].empleadoNombre)}</b><span class="mono">${en?c12(en.hora):'—'} → ${sa?c12(sa.hora):'en turno'} · <b class="text-sky-600">${dur(ms)}</b></span></div>`}).join('')}<p class="text-[11px] uppercase font-bold text-slate-500 mt-3">Detalle de marcas</p></div>`:'';
+ abrir(`Asistencia ${d}/${mo}/${y}`,resDia+(m.length?m.map(r=>`<div class="flex justify-between items-center gap-2 p-3 mb-2 rounded-2xl bx text-xs"><div><b class="${r.tipo==='Entrada'?'text-emerald-600':'text-rose-600'}">${r.tipo}</b> · <b>${esc(r.empleadoNombre)}</b><p class="mono font-bold">${a12(r.hora)}</p><p class="text-slate-500">${esc(r.estadoPuntualidad||'')}${r.duracionTurno&&r.duracionTurno!=='—'?' · '+esc(r.duracionTurno):''}${r.notas?' · '+esc(r.notas):''}</p></div>${adminQ()?`<button class="b text-rose-600" onclick="confBorrar(['${r.id}'],'este registro')">Eliminar</button>`:''}</div>`).join(''):'<p class="text-xs text-center text-slate-500 py-6">Sin registros para esta fecha.</p>')
+ +`<div class="flex flex-wrap gap-2 pt-2"><button class="b bg-emerald-600 text-white" onclick="csvDia()">Exportar CSV</button><button class="b sl" onclick="copiar()">Copiar</button>${adminQ()&&m.length?`<button class="b bg-rose-600 text-white" onclick="confBorrar(${esc(JSON.stringify(m.map(x=>x.id)))},'todos los registros del día de todo el personal')">Borrar día</button>`:''}</div>`)}
+function csvDia(){bajar(`asistencia_${sel}.csv`,'ID;Fecha;Empleado;Tipo;Hora;Puntualidad;Duración;Notas\r\n'+marcasDetalle(sel).map(r=>[r.id,r.fechaLegible,r.empleadoNombre,r.tipo,a12(r.hora),r.estadoPuntualidad,r.duracionTurno,r.notas].map(csvq).join(';')).join('\r\n'));toast('Exportado','CSV generado')}
+function copiar(){const t=`Asistencia ${sel}:\n`+marcasDetalle(sel).map(r=>`- ${r.empleadoNombre}: ${r.tipo} ${a12(r.hora)} (${r.estadoPuntualidad||''})`).join('\n'),
+ ok=()=>toast('Copiado','Detalle copiado'),fb=()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}a.remove();ok()};
+ navigator.clipboard?navigator.clipboard.writeText(t).then(ok,fb):fb()}
+function confBorrar(ids,que){abrir('Confirmar eliminación',`<p class="text-sm mb-4">¿Eliminar ${que}? Esta acción no se puede deshacer.</p><div class="flex gap-2 justify-end"><button class="b sl" onclick="cerrar()">Cancelar</button><button class="b bg-rose-600 text-white" onclick="borrar(${esc(JSON.stringify(ids))})">Sí, eliminar</button></div>`)}
+function borrar(ids){const u={};ids.forEach(i=>u['registros/'+i]=null);DB.update(DB.ref(''),u).then(()=>{audit('Borrado',ids.length+' registro(s)');cerrar();toast('Eliminado','Registros borrados')})}
+function limpiar(){abrir('Limpiar historial',`<p class="text-sm mb-4">Se borrará TODO el historial de asistencia.</p><div class="flex gap-2 justify-end"><button class="b sl" onclick="cerrar()">Cancelar</button><button class="b bg-rose-600 text-white" onclick="DB.remove(DB.ref('registros')).then(()=>{audit('Limpieza global','Historial borrado');cerrar();toast('Listo','Historial borrado')})">Sí, borrar todo</button></div>`)}
+
+function mCuentas(){abrir('Gestión de credenciales',`<form onsubmit="gCuentas(event)" class="space-y-2"><p class="text-[11px] uppercase font-bold text-slate-500">Administrador</p><div class="grid grid-cols-2 gap-2"><input id="au" class="i" value="${esc(adm.usuario)}" required minlength="2" placeholder="Usuario"><input id="ac" class="i mono" value="${esc(adm.codigo)}" required minlength="3" placeholder="Contraseña"></div><p class="text-[11px] uppercase font-bold text-slate-500 pt-2">10 cuentas: nombre · usuario · código · activa</p>${ctas.map((c,i)=>`<div class="grid grid-cols-12 gap-1.5 items-center"><span class="col-span-1 text-xs text-center">${i+1}</span><input id="n${i}" class="i col-span-4" value="${esc(c.nombre)}" required><input id="u${i}" class="i col-span-3" value="${esc(c.usuario)}" required><input id="c${i}" class="i mono col-span-3" value="${esc(c.codigo)}" required><input id="a${i}" type="checkbox" class="col-span-1 mx-auto" ${c.activa!==false?'checked':''}></div>`).join('')}<p id="ce" class="hidden text-xs text-rose-600"></p><div class="text-right"><button class="b bg-emerald-600 text-white">Guardar cambios</button></div></form>`)}
+function gCuentas(e){e.preventDefault();const o={};ctas.forEach((c,i)=>o['cuenta_'+c.slot]={slot:c.slot,cuentaId:c.cuentaId,nombre:$('n'+i).value.trim(),usuario:$('u'+i).value.trim(),codigo:$('c'+i).value.trim(),activa:$('a'+i).checked});
+ const au=$('au').value.trim(),us=[au,...Object.values(o).map(c=>c.usuario)].map(x=>x.toLowerCase());
+ if(new Set(us).size!==us.length){$('ce').textContent='Hay nombres de usuario repetidos.';$('ce').classList.remove('hidden');return}
+ DB.update(DB.ref(''),{cuentasAcceso:o,cuentaAdmin:{usuario:au,codigo:$('ac').value.trim(),nombre:adm.nombre}}).then(()=>{audit('Cuentas','Credenciales modificadas');cerrar();toast('Guardado','Cuentas actualizadas')})}
+
+function mHorario(){abrir('Horario y puntualidad',`<form onsubmit="gHorario(event)" class="space-y-3"><div class="grid grid-cols-2 gap-2"><label class="text-xs">Entrada esperada<input id="he" type="time" class="i" value="${cfg.horaEsperada}" required></label><label class="text-xs">Salida esperada<input id="hs" type="time" class="i" value="${cfg.horaSalidaEsperada}" required></label></div><label class="text-xs block">Tolerancia (min)<input id="ht" type="number" min="0" max="120" class="i" value="${cfg.toleranciaMin}" required></label><div class="text-right"><button class="b bg-emerald-600 text-white">Guardar</button></div></form>`)}
+function gHorario(e){e.preventDefault();const he=$('he').value,hs=$('hs').value;DB.update(DB.ref('config'),{horaEsperada:he,horaSalidaEsperada:hs,toleranciaMin:+$('ht').value}).then(()=>{audit('Horario',`${he} – ${hs}`);cerrar();toast('Actualizado','Horario guardado')})}
+
+function mManual(){abrir('Fichaje manual',`<form onsubmit="gManual(event)" class="space-y-2"><select id="me" class="i">${personas().map(p=>`<option value="${esc(p.id)}" ${p.id===emp?'selected':''}>${esc(p.nombre)}</option>`).join('')}</select><div class="grid grid-cols-2 gap-2"><select id="mk" class="i"><option>Entrada</option><option>Salida</option></select><input id="mf" type="date" class="i" value="${sel||iso(new Date())}" required></div><div class="grid grid-cols-2 gap-2"><input id="mh" type="time" step="1" class="i" value="09:00:00" required><input id="md" class="i" placeholder="Duración (si es salida)"></div><input id="mn" class="i" placeholder="Motivo del ajuste" required maxlength="80"><div class="text-right"><button class="b bg-sky-600 text-white">Registrar ajuste</button></div></form>`)}
+function gManual(e){e.preventDefault();const p=personas().find(x=>x.id===$('me').value),f=$('mf').value,[y,mo,d]=f.split('-').map(Number),[h,mi,s=0]=$('mh').value.split(':').map(Number),ts=new Date(y,mo-1,d,h,mi,s).getTime(),t=$('mk').value;
+ guardarReg({timestamp:ts,fechaISO:f,empleadoId:p.id,empleadoNombre:p.nombre,tipo:t,hora:`${pad(h)}:${pad(mi)}:${pad(s)}`,duracionTurno:$('md').value.trim()||'—',estadoPuntualidad:t==='Entrada'?evEnt(ts).et:evSal(ts).et,notas:'[Ajuste] '+$('mn').value.trim(),registradoPor:ses.usuario},'Fichaje manual registrado').then(()=>{audit('Fichaje manual','Marca para '+p.nombre);cerrar()})}
+
+function mReporte(){const f=personas().map(p=>({p,...resumen(p.id,PRE())}));
+ abrir(`Reporte ${MESES[mes]} ${anio}`,`<div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="text-left text-slate-500 uppercase text-[10px]"><th class="p-2">Titular</th><th>Días</th><th>Horas</th><th>A tiempo</th><th>Atrasos</th><th>Sal. ant.</th></tr></thead><tbody>${f.map(r=>`<tr class="border-t border-slate-200 dark:border-slate-800"><td class="p-2"><b>${esc(r.p.nombre)}</b><br><span class="mono text-slate-400">${esc(r.p.sub)}</span></td><td>${r.dias}</td><td class="text-sky-600 font-bold">${dur(r.ms)}</td><td class="text-emerald-600 font-bold">${r.ok}</td><td class="text-rose-600 font-bold">${r.tarde}</td><td class="text-amber-600 font-bold">${r.ant}</td></tr>`).join('')}</tbody></table></div><button class="b bg-emerald-600 text-white mt-3" onclick="csvRep()">Descargar CSV</button>`)}
+function csvRep(){const pre=PRE();bajar(`reporte_${pre}.csv`,'Mes;Titular;Días;Horas;A tiempo;Atrasos;Salidas anticipadas\r\n'+personas().map(p=>{const r=resumen(p.id,pre);return[pre,p.nombre,r.dias,dur(r.ms),r.ok,r.tarde,r.ant].map(csvq).join(';')}).join('\r\n'))}
+
+function mAud(){abrir('Bitácora de auditoría (últimas 50)',aud.length?aud.map(a=>`<div class="p-3 mb-2 rounded-2xl bx text-xs"><div class="flex justify-between font-bold text-purple-600"><span>${esc(a.accion)}</span><span class="mono text-[10px] text-slate-400">${esc(a.fechaLegible)}</span></div>${esc(a.detalle)} <span class="text-slate-400">· ${esc(a.usuario)}</span></div>`).join(''):'<p class="text-xs text-center text-slate-500 py-6">Sin registros de auditoría.</p>')}
+
+function mNuevo(){abrir('Agregar empleado',`<form onsubmit="gNuevo(event)" class="space-y-2"><input id="en" class="i" placeholder="Nombre completo" required minlength="2" maxlength="50"><input id="ec" class="i" placeholder="Cargo / departamento" required maxlength="40"><div class="text-right"><button class="b bg-emerald-600 text-white">Guardar empleado</button></div></form>`)}
+function gNuevo(e){e.preventDefault();const id='EMP-'+Date.now(),n=$('en').value.trim(),c=$('ec').value.trim();DB.set(DB.ref('empleadosExtras/'+id),{id,nombre:n,cargo:c}).then(()=>{audit('Nuevo empleado',n);emp=id;perm();draw();cerrar();toast('Creado',n)})}
+
+/* ---------- Inicio ---------- */
+(()=>{let g=null;try{g=localStorage.getItem('ca_tema')}catch(e){}if(g?g==='d':matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.classList.add('dark')})();
+(async()=>{let a=null;if(FB.apiKey&&FB.databaseURL){try{a=await fbStore()}catch(e){console.error('Firebase no disponible, usando modo local',e)}}
+ DB=a||local();$('sync').textContent=a?'Sincronizado con Firebase':'Modo local (solo este navegador)';escuchas();
+ try{const s=JSON.parse(sessionStorage.getItem('ca_ses'));if(s)entrar(s)}catch(e){}})();
+</script>
+</body></html>
